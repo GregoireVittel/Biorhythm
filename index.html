@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BioFlow - Personal Biorhythms</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN for standalone usage) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Babel for in-browser compilation -->
+    <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
@@ -45,10 +45,6 @@
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
-      }
-      @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
       }
       @keyframes textGradient {
         0% { background-position: 0% 50%; }
@@ -85,7 +81,7 @@
   <body>
     <div id="root"></div>
 
-    <!-- MAIN APPLICATION LOGIC -->
+    <!-- MAIN APP SCRIPT -->
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'react';
       import { createRoot } from 'react-dom/client';
@@ -100,7 +96,7 @@
       import { GoogleGenAI } from "@google/genai";
 
       // ----------------------------------------------------------------------
-      // UTILS
+      // 1. UTILS
       // ----------------------------------------------------------------------
       const CYCLES = {
         physical: 23,
@@ -150,7 +146,7 @@
       };
 
       // ----------------------------------------------------------------------
-      // SERVICES
+      // 2. SERVICES
       // ----------------------------------------------------------------------
       const getDailyAdvice = async (state) => {
         const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
@@ -183,10 +179,10 @@
       };
 
       // ----------------------------------------------------------------------
-      // COMPONENTS
+      // 3. COMPONENTS
       // ----------------------------------------------------------------------
 
-      // 1. Starfield Background
+      // --- Canvas Starfield Background ---
       const StarfieldBackground = () => {
         const canvasRef = useRef(null);
 
@@ -198,7 +194,7 @@
 
           let animationFrameId;
           let stars = [];
-          const numStars = 250;
+          const numStars = 200;
           
           const resize = () => {
             canvas.width = window.innerWidth;
@@ -219,6 +215,7 @@
           };
 
           const draw = () => {
+            // Fill with slight opacity for trail effect
             ctx.fillStyle = 'rgba(15, 15, 22, 0.4)'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
@@ -226,7 +223,8 @@
             const cy = canvas.height / 2;
 
             stars.forEach(star => {
-              star.z -= 0.8; // Speed
+              // Move star closer
+              star.z -= 0.5; 
               if (star.z <= 0) {
                  star.z = canvas.width;
                  star.x = Math.random() * canvas.width - canvas.width/2;
@@ -268,7 +266,7 @@
         );
       };
 
-      // 2. Daily Card
+      // --- Daily Card Component ---
       const DailyCard = ({ type, value }) => {
         const percentage = getPercentage(value);
         const label = getInterpretation(value);
@@ -320,7 +318,7 @@
         );
       };
 
-      // 3. Chart Component
+      // --- Chart Component ---
       const BiorhythmChart = ({ data }) => {
         return (
           <div className="w-full h-[400px] bg-white/5 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/10 shadow-xl">
@@ -359,7 +357,7 @@
         );
       };
 
-      // 4. Bottom Info Panel
+      // --- Bottom Info Panel ---
       const BottomInfoPanel = () => {
         const [isOpen, setIsOpen] = useState(false);
 
@@ -392,9 +390,6 @@
                       <div className="prose prose-invert max-w-none pl-0 md:pl-11 text-white/70">
                           <p className="mb-4">
                             When we schedule important tasks during the times when we’re naturally most effective, productivity increases and fatigue decreases.
-                          </p>
-                          <p>
-                            This principle of “the right task at the right time” relies on a deep understanding of our biorhythm. Thus, certain tasks, such as strategic decision-making, complex problem-solving, or creativity, find their place during moments when our attention and energy are at their peak.
                           </p>
                       </div>
                     </section>
@@ -457,7 +452,7 @@
       };
 
       // ----------------------------------------------------------------------
-      // MAIN APP
+      // 4. MAIN APP
       // ----------------------------------------------------------------------
       const App = () => {
         const [dob, setDob] = useState('');
