@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { BiorhythmState } from '../types';
+import { BiorhythmState } from '../types.ts';
 
 export const getDailyAdvice = async (state: BiorhythmState): Promise<string> => {
   // Safely check for API key in a way that won't crash in browser environments

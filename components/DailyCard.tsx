@@ -1,6 +1,6 @@
 import React from 'react';
 import { Activity, Heart, Brain, AlertTriangle, TrendingUp, TrendingDown, BatteryCharging } from 'lucide-react';
-import { getPercentage, getInterpretation } from '../utils/biorhythm';
+import { getPercentage, getInterpretation } from '../utils/biorhythm.ts';
 
 interface DailyCardProps {
   type: 'physical' | 'emotional' | 'intellectual';
