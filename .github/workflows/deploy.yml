@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -18,17 +18,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # allow the action to use the checked-out token to push
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # cache removed because there is no lockfile in the repo
 
       - name: (Optional) Create .env.local from secret
-        # If your build needs GEMINI_API_KEY at build-time, set it in repo Settings → Secrets as GEMINI_API_KEY
+        # If your build needs GEMINI_API_KEY at build-time, set it in repo Settings → Secrets → Actions as GEMINI_API_KEY
         run: |
           if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
             echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env.local
@@ -46,5 +46,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./dist
-          publish_user_name: github-actions[bot]
-          publish_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
