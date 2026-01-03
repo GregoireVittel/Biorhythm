@@ -61,6 +61,9 @@ const App: React.FC = () => {
 
         {/* Input Section */}
         <div className="max-w-md mx-auto mb-16">
+          <label className="block text-center text-purple-200 mb-4 font-medium text-lg tracking-wide">
+            What is your date of birth?
+          </label>
           <div className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl flex items-center">
             <div className="pl-4 text-white/50">
               <Calendar className="w-5 h-5" />
