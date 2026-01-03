@@ -1,17 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
-import { BiorhythmState } from '../types.ts';
+import { BiorhythmState } from '../types';
 
 export const getDailyAdvice = async (state: BiorhythmState): Promise<string> => {
-  // Safely check for API key in a way that won't crash in browser environments
-  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
-
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
     console.warn("API_KEY not found in environment variables.");
     return "API Key not configured. Please add your Gemini API key to use the AI advice feature.";
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const prompt = `
       You are a helpful wellness assistant. 

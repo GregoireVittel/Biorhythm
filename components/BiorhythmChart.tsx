@@ -10,7 +10,7 @@ import {
   ReferenceLine,
   Legend
 } from 'recharts';
-import { BiorhythmData } from '../types.ts';
+import { BiorhythmData } from '../types';
 
 interface BiorhythmChartProps {
   data: BiorhythmData[];
