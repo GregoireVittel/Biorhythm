@@ -83,7 +83,8 @@
       import { 
         Calendar, RefreshCw, ChevronRight, Activity, Heart, Brain, 
         AlertTriangle, TrendingUp, TrendingDown, BatteryCharging, 
-        ChevronUp, BookOpen, Sun, Moon, Wind, Zap, ClipboardCheck, Eye 
+        ChevronUp, BookOpen, Sun, Moon, Wind, Zap, ClipboardCheck, Eye,
+        Shield, Users, Briefcase, Dumbbell
       } from 'lucide-react';
       import {
         LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend
@@ -342,69 +343,131 @@
               </button>
 
               <div className={`flex-1 overflow-y-auto custom-scrollbar transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                 <div className="py-8 space-y-16 pb-24">
+                 <div className="py-8 space-y-12 pb-24">
+                    
+                    {/* Section 1: What Are Biorhythms? */}
                     <section>
-                      <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                        <span className="w-8 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></span>
-                        Adapting your work
-                      </h3>
-                      <div className="prose prose-invert max-w-none pl-0 md:pl-11 text-white/70">
-                          <p className="mb-4">
-                            When we schedule important tasks during the times when we’re naturally most effective, productivity increases and fatigue decreases.
-                          </p>
+                      <h3 className="text-2xl font-bold text-white mb-6">What Are Biorhythms?</h3>
+                      <p className="text-white/80 mb-6 leading-relaxed">
+                        Biorhythms are cyclical patterns believed to influence physical, emotional, and cognitive states over time. The classic model tracks three primary cycles starting from your date of birth:
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                          <div className="flex items-center gap-2 mb-2 text-red-400 font-bold">
+                            <Activity size={18} /> Physical (23 days)
+                          </div>
+                          <p className="text-sm text-white/60">Energy, stamina, strength, coordination.</p>
+                        </div>
+                        <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                          <div className="flex items-center gap-2 mb-2 text-emerald-400 font-bold">
+                            <Heart size={18} /> Emotional (28 days)
+                          </div>
+                          <p className="text-sm text-white/60">Mood, sensitivity, creativity, emotional stability.</p>
+                        </div>
+                        <div className="bg-white/5 p-5 rounded-xl border border-white/10">
+                          <div className="flex items-center gap-2 mb-2 text-blue-400 font-bold">
+                            <Brain size={18} /> Intellectual (33 days)
+                          </div>
+                          <p className="text-sm text-white/60">Focus, learning, problem-solving, decision-making.</p>
+                        </div>
                       </div>
+                      <p className="text-white/70 mt-4 text-sm italic">
+                        Each cycle oscillates between high (positive) and low (negative) phases, crossing a critical day when the cycle shifts direction—often associated with instability or heightened sensitivity.
+                      </p>
                     </section>
 
+                    {/* Section 2: How to Read */}
                     <section>
-                      <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                        <span className="w-8 h-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></span>
-                        Lifestyle Habits
-                      </h3>
-                      <div className="pl-0 md:pl-11 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {[
-                            { icon: Sun, color: "text-yellow-300", title: "Morning Light", text: "Get 10 mins of sun immediately after waking." },
-                            { icon: Moon, color: "text-indigo-300", title: "Evening Dimming", text: "Limit screens and bright lights 2 hours before bed." },
-                            { icon: Wind, color: "text-emerald-300", title: "Active Breaks", text: "Move your body every 90 minutes to reset focus." },
-                            { icon: Zap, color: "text-orange-300", title: "Power Naps", text: "If low energy, a 20-min nap is better than caffeine." }
-                          ].map((item, i) => (
-                            <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
-                              <div className={`flex items-center gap-2 mb-2 ${item.color}`}>
-                                <item.icon size={18} />
-                                <h4 className="font-semibold text-sm">{item.title}</h4>
-                              </div>
-                              <p className="text-xs text-white/60">{item.text}</p>
-                            </div>
-                          ))}
-                      </div>
-                    </section>
-
-                    <section>
-                       <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                        <span className="w-8 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></span>
-                        Observe Your Rhythm
-                      </h3>
-                      <div className="pl-0 md:pl-11">
-                         <div className="bg-gradient-to-br from-emerald-900/20 to-teal-900/20 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
-                           <div className="relative z-10">
-                               <h4 className="text-lg font-bold text-emerald-300 mb-4 flex items-center gap-2">
-                                 <ClipboardCheck className="w-5 h-5" /> Daily Checklist
-                               </h4>
-                               <ul className="space-y-2">
-                                 {[
-                                   "Energy level upon waking (1-10)?",
-                                   "Peak focus time today?",
-                                   "Time of afternoon slump?",
-                                 ].map((item, i) => (
-                                   <li key={i} className="flex items-center gap-3 text-white/70 text-sm">
-                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                     <span>{item}</span>
-                                   </li>
-                                 ))}
-                               </ul>
-                           </div>
+                      <h3 className="text-2xl font-bold text-white mb-6">How to Read Your Biorhythm</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-green-500/20 rounded-lg text-green-400 mt-1">
+                            <TrendingUp size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white">High phase</h4>
+                            <p className="text-white/70 text-sm">Favorable for activities aligned with that cycle. You may feel more capable and energetic.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 mt-1">
+                            <BatteryCharging size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white">Low phase</h4>
+                            <p className="text-white/70 text-sm">Conserve energy; avoid pushing limits. It is a time for recharging and rest.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-yellow-500/20 rounded-lg text-yellow-400 mt-1">
+                            <AlertTriangle size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white">Critical days (zero crossings)</h4>
+                            <p className="text-white/70 text-sm">Be cautious; plan lightly, double-check decisions. These occur when the curve crosses the center line.</p>
+                          </div>
                         </div>
                       </div>
                     </section>
+
+                    {/* Section 3: Practical Applications */}
+                    <section>
+                      <h3 className="text-2xl font-bold text-white mb-6">Practical Applications</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-purple-300 font-semibold">
+                            <Briefcase size={18} /> Work & Learning
+                          </div>
+                          <p className="text-sm text-white/60">Schedule demanding analysis or learning during intellectual highs.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-orange-300 font-semibold">
+                            <Dumbbell size={18} /> Health & Fitness
+                          </div>
+                          <p className="text-sm text-white/60">Train harder during physical highs; prioritize recovery during lows.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-pink-300 font-semibold">
+                            <Users size={18} /> Relationships & Creativity
+                          </div>
+                          <p className="text-sm text-white/60">Address sensitive conversations or creative work during emotional highs.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-red-300 font-semibold">
+                            <Shield size={18} /> Risk Management
+                          </div>
+                          <p className="text-sm text-white/60">Avoid major commitments on critical days, especially when multiple cycles cross.</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Section 4: Using Effectively & Limitations */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-4">Using Biorhythms Effectively</h3>
+                        <p className="text-sm text-white/60 mb-4">(Without Overreliance)</p>
+                        <ul className="space-y-3">
+                          {[
+                            "Treat biorhythms as signals, not rules.",
+                            "Combine them with sleep quality, stress levels, and workload.",
+                            "Track outcomes over time to see if patterns align with your experience."
+                          ].map((item, i) => (
+                            <li key={i} className="flex items-start gap-2 text-white/80 text-sm">
+                              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5"></div>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-white/5 rounded-2xl p-6 border-l-4 border-yellow-500/50">
+                         <h3 className="text-lg font-bold text-white mb-2">Limitations & Perspective</h3>
+                         <p className="text-white/70 text-sm leading-relaxed">
+                           Scientific support for biorhythms is mixed. Their value often lies in structured self-reflection and planning discipline, rather than prediction. Use them as a lightweight planning aid—not a determinant.
+                         </p>
+                      </div>
+                    </section>
+
                  </div>
               </div>
             </div>
