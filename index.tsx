@@ -1,13 +1,507 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import { 
+  Calendar, RefreshCw, Sparkles, ChevronRight, Activity, Heart, Brain, 
+  AlertTriangle, TrendingUp, TrendingDown, BatteryCharging, 
+  ChevronUp, BookOpen, Sun, Moon, Wind, Zap, ClipboardCheck, Eye 
+} from 'lucide-react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend
+} from 'recharts';
+import { GoogleGenAI } from "@google/genai";
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+// --- TYPES ---
+interface BiorhythmData {
+  date: string;
+  physical: number;
+  emotional: number;
+  intellectual: number;
+  average: number;
 }
 
-const root = ReactDOM.createRoot(rootElement);
+interface BiorhythmState {
+  physical: number;
+  emotional: number;
+  intellectual: number;
+}
+
+// --- UTILS ---
+const CYCLES = {
+  physical: 23,
+  emotional: 28,
+  intellectual: 33,
+};
+
+const calculateBiorhythm = (dob: Date, targetDate: Date): BiorhythmState => {
+  const diffTime = targetDate.getTime() - dob.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+  return {
+    physical: Math.sin((2 * Math.PI * diffDays) / CYCLES.physical),
+    emotional: Math.sin((2 * Math.PI * diffDays) / CYCLES.emotional),
+    intellectual: Math.sin((2 * Math.PI * diffDays) / CYCLES.intellectual),
+  };
+};
+
+const getBiorhythmSeries = (dob: Date, startDate: Date, days: number): BiorhythmData[] => {
+  const series: BiorhythmData[] = [];
+  for (let i = 0; i < days; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+    
+    const bio = calculateBiorhythm(dob, currentDate);
+    const average = (bio.physical + bio.emotional + bio.intellectual) / 3;
+
+    series.push({
+      date: currentDate.toISOString().split('T')[0],
+      physical: parseFloat(bio.physical.toFixed(2)),
+      emotional: parseFloat(bio.emotional.toFixed(2)),
+      intellectual: parseFloat(bio.intellectual.toFixed(2)),
+      average: parseFloat(average.toFixed(2)),
+    });
+  }
+  return series;
+};
+
+const getPercentage = (value: number): number => Math.round(((value + 1) / 2) * 100);
+
+const getInterpretation = (value: number): string => {
+  if (value > 0.5) return "High / Peak Performance";
+  if (value > 0.1) return "Positive Phase";
+  if (value >= -0.1 && value <= 0.1) return "Critical / Transition";
+  if (value < -0.5) return "Low / Recharging";
+  return "Negative Phase";
+};
+
+// --- SERVICES ---
+const getDailyAdvice = async (state: BiorhythmState): Promise<string> => {
+  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
+
+  if (!apiKey) {
+    return "API Key not configured. Please add your Gemini API key to use the AI advice feature.";
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+    const prompt = `
+      You are a helpful wellness assistant. 
+      Interpret the following biorhythm values (range -1.0 to 1.0) for a user today:
+      Physical: ${state.physical.toFixed(2)}
+      Emotional: ${state.emotional.toFixed(2)}
+      Intellectual: ${state.intellectual.toFixed(2)}
+      Provide a short, specific, and encouraging piece of daily advice (max 40 words) based on this combination.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+    });
+
+    return response.text?.trim() || "Stay balanced and listen to your body today.";
+  } catch (error) {
+    console.error("Error fetching Gemini advice:", error);
+    return "Unable to retrieve AI advice at the moment. Trust your intuition!";
+  }
+};
+
+// --- COMPONENTS ---
+
+// 1. Starfield Background (Canvas)
+const StarfieldBackground: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let stars: Array<{x: number, y: number, z: number, size: number}> = [];
+    const numStars = 200;
+    
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    };
+
+    const initStars = () => {
+      stars = [];
+      for(let i=0; i<numStars; i++) {
+        stars.push({
+          x: Math.random() * canvas.width - canvas.width/2,
+          y: Math.random() * canvas.height - canvas.height/2,
+          z: Math.random() * canvas.width,
+          size: Math.random() * 2
+        });
+      }
+    };
+
+    const draw = () => {
+      // Clear with trail effect
+      ctx.fillStyle = 'rgba(15, 15, 22, 0.4)'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      stars.forEach(star => {
+        // Move star closer
+        star.z -= 0.5; // Speed
+        if (star.z <= 0) {
+           star.z = canvas.width;
+           star.x = Math.random() * canvas.width - canvas.width/2;
+           star.y = Math.random() * canvas.height - canvas.height/2;
+        }
+
+        const x = (star.x / star.z) * canvas.width + cx;
+        const y = (star.y / star.z) * canvas.height + cy;
+        const radius = (1 - star.z / canvas.width) * 3 * star.size;
+
+        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+           const alpha = (1 - star.z / canvas.width);
+           ctx.beginPath();
+           ctx.fillStyle = `rgba(200, 200, 255, ${alpha})`;
+           ctx.arc(x, y, radius, 0, Math.PI * 2);
+           ctx.fill();
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="fixed inset-0 w-full h-full -z-10"
+      style={{ background: '#0f0f16' }}
+    />
+  );
+};
+
+// 2. Daily Card
+interface DailyCardProps {
+  type: 'physical' | 'emotional' | 'intellectual';
+  value: number;
+}
+
+const DailyCard: React.FC<DailyCardProps> = ({ type, value }) => {
+  const percentage = getPercentage(value);
+  const label = getInterpretation(value);
+  
+  let Icon = Activity;
+  let colorClass = "text-red-400";
+  let bgClass = "bg-red-500/10 border-red-500/30";
+  let title = "Physical";
+  
+  if (type === 'emotional') {
+    Icon = Heart;
+    colorClass = "text-emerald-400";
+    bgClass = "bg-emerald-500/10 border-emerald-500/30";
+    title = "Emotional";
+  } else if (type === 'intellectual') {
+    Icon = Brain;
+    colorClass = "text-blue-400";
+    bgClass = "bg-blue-500/10 border-blue-500/30";
+    title = "Intellectual";
+  }
+
+  let StatusIcon = BatteryCharging;
+  if (value > 0.5) StatusIcon = TrendingUp;
+  else if (value < -0.5) StatusIcon = TrendingDown;
+  else if (Math.abs(value) < 0.1) StatusIcon = AlertTriangle;
+
+  return (
+    <div className={`backdrop-blur-md rounded-2xl p-6 border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${bgClass}`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-3 rounded-xl bg-white/5 ${colorClass}`}>
+          <Icon size={24} />
+        </div>
+        <div className={`flex items-center gap-1 text-sm font-medium ${colorClass}`}>
+          <StatusIcon size={16} />
+          <span>{Math.round(value * 100)}%</span>
+        </div>
+      </div>
+      
+      <h3 className="text-white font-bold text-xl mb-1">{title}</h3>
+      <p className="text-white/60 text-sm mb-4">{label}</p>
+      
+      <div className="w-full bg-black/40 rounded-full h-2 overflow-hidden">
+        <div 
+          className={`h-full rounded-full transition-all duration-1000 ease-out ${colorClass.replace('text-', 'bg-')}`} 
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// 3. Chart
+const BiorhythmChart: React.FC<{ data: BiorhythmData[] }> = ({ data }) => {
+  return (
+    <div className="w-full h-[400px] bg-white/5 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/10 shadow-xl">
+      <h3 className="text-white/90 font-semibold mb-6 text-lg">Your Next 30 Days Cycle</h3>
+      <ResponsiveContainer width="100%" height="85%">
+        <LineChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+          <XAxis 
+            dataKey="date" 
+            stroke="rgba(255,255,255,0.4)" 
+            tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+            tick={{ fontSize: 11 }}
+          />
+          <YAxis 
+            domain={[-1.2, 1.2]} 
+            stroke="rgba(255,255,255,0.4)" 
+            tickCount={5}
+            tick={{ fontSize: 11 }}
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1a1b26', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+            itemStyle={{ fontSize: 13, fontWeight: 500 }}
+            labelStyle={{ color: '#94a3b8', marginBottom: '8px', fontSize: 12 }}
+            formatter={(value: number) => [`${(value * 100).toFixed(0)}%`]}
+            labelFormatter={(label) => new Date(label).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="circle" />
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
+          
+          <Line type="monotone" dataKey="physical" stroke="#ef4444" strokeWidth={2} dot={false} name="Physical" />
+          <Line type="monotone" dataKey="emotional" stroke="#10b981" strokeWidth={2} dot={false} name="Emotional" />
+          <Line type="monotone" dataKey="intellectual" stroke="#3b82f6" strokeWidth={2} dot={false} name="Intellectual" />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// 4. Bottom Info Panel
+const BottomInfoPanel: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isOpen ? 'h-[85vh]' : 'h-14 md:h-16'}`}>
+      <div className="absolute inset-0 bg-[#0f0f16]/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" />
+      <div className="relative max-w-4xl mx-auto px-6 h-full flex flex-col">
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex-none flex items-center justify-between py-4 text-left group focus:outline-none cursor-pointer border-b border-white/5"
+        >
+          <div className="flex items-center gap-3 text-purple-200 group-hover:text-white transition-colors">
+            <BookOpen size={20} className={isOpen ? 'text-purple-400' : 'text-purple-200/70'} />
+            <span className="font-semibold tracking-wide text-xs md:text-sm uppercase">
+              Biorhythm Insights & Guide
+            </span>
+          </div>
+          <div className={`text-white/50 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}>
+            <ChevronUp size={20} />
+          </div>
+        </button>
+
+        <div className={`flex-1 overflow-y-auto custom-scrollbar transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+           <div className="py-8 space-y-16 pb-24">
+              <section>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></span>
+                  Adapting your work
+                </h3>
+                <div className="prose prose-invert max-w-none pl-0 md:pl-11 text-white/70">
+                    <p className="mb-4">
+                      When we schedule important tasks during the times when we’re naturally most effective, productivity increases and fatigue decreases.
+                    </p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></span>
+                  Lifestyle Habits
+                </h3>
+                <div className="pl-0 md:pl-11 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { icon: Sun, color: "text-yellow-300", title: "Morning Light", text: "Get 10 mins of sun immediately after waking." },
+                      { icon: Moon, color: "text-indigo-300", title: "Evening Dimming", text: "Limit screens and bright lights 2 hours before bed." },
+                      { icon: Wind, color: "text-emerald-300", title: "Active Breaks", text: "Move your body every 90 minutes to reset focus." },
+                      { icon: Zap, color: "text-orange-300", title: "Power Naps", text: "If low energy, a 20-min nap is better than caffeine." }
+                    ].map((item, i) => (
+                      <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                        <div className={`flex items-center gap-2 mb-2 ${item.color}`}>
+                          <item.icon size={18} />
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                        </div>
+                        <p className="text-xs text-white/60">{item.text}</p>
+                      </div>
+                    ))}
+                </div>
+              </section>
+
+              <section>
+                 <h3 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></span>
+                  Observe Your Rhythm
+                </h3>
+                <div className="pl-0 md:pl-11">
+                   <div className="bg-gradient-to-br from-emerald-900/20 to-teal-900/20 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
+                     <div className="relative z-10">
+                         <h4 className="text-lg font-bold text-emerald-300 mb-4 flex items-center gap-2">
+                           <ClipboardCheck className="w-5 h-5" /> Daily Checklist
+                         </h4>
+                         <ul className="space-y-2">
+                           {[
+                             "Energy level upon waking (1-10)?",
+                             "Peak focus time today?",
+                             "Time of afternoon slump?",
+                           ].map((item, i) => (
+                             <li key={i} className="flex items-center gap-3 text-white/70 text-sm">
+                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                               <span>{item}</span>
+                             </li>
+                           ))}
+                         </ul>
+                     </div>
+                  </div>
+                </div>
+              </section>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN APP ---
+const App: React.FC = () => {
+  const [dob, setDob] = useState<string>('');
+  const [biorhythmState, setBiorhythmState] = useState<BiorhythmState | null>(null);
+  const [chartData, setChartData] = useState<BiorhythmData[]>([]);
+  const [aiAdvice, setAiAdvice] = useState<string | null>(null);
+  const [loadingAdvice, setLoadingAdvice] = useState<boolean>(false);
+  const [today] = useState(new Date());
+
+  const handleCalculate = async () => {
+    if (!dob) return;
+    const birthDate = new Date(dob);
+    const calculatedState = calculateBiorhythm(birthDate, today);
+    const series = getBiorhythmSeries(birthDate, today, 30);
+    setBiorhythmState(calculatedState);
+    setChartData(series);
+    setAiAdvice(null);
+  };
+
+  const handleGetAdvice = async () => {
+    if (!biorhythmState) return;
+    setLoadingAdvice(true);
+    const advice = await getDailyAdvice(biorhythmState);
+    setAiAdvice(advice);
+    setLoadingAdvice(false);
+  };
+
+  return (
+    <div className="relative min-h-screen text-white font-sans selection:bg-purple-500 selection:text-white pb-24">
+      <StarfieldBackground />
+      
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 md:py-20">
+        <header className="text-center mb-12 space-y-6">
+          <div className="inline-flex items-center justify-center p-3 bg-white/5 backdrop-blur-md rounded-full shadow-lg border border-white/10">
+             <RefreshCw className="w-5 h-5 text-purple-400 mr-2 animate-[spin_4s_linear_infinite]" />
+             <span className="font-semibold tracking-wider text-xs text-purple-200 uppercase">BIORHYTHM CALCULATOR</span>
+          </div>
+          <h1 className="text-4xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 animate-text">
+            Check Your Natural Rhythm
+          </h1>
+          <p className="text-base md:text-lg text-white/50 max-w-2xl mx-auto">
+            Discover your physical, emotional, and intellectual cycles.
+          </p>
+        </header>
+
+        <div className="max-w-md mx-auto mb-16">
+          <div className="bg-white/5 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl flex items-center group focus-within:border-purple-500/50 transition-colors">
+            <div className="pl-4 text-white/40">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <input
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="bg-transparent border-none text-white text-lg w-full px-4 py-3 focus:ring-0 focus:outline-none placeholder-white/30 [color-scheme:dark]"
+            />
+            <button
+              onClick={handleCalculate}
+              disabled={!dob}
+              className="bg-white text-indigo-950 px-6 py-3 rounded-xl font-bold hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+
+        {biorhythmState && (
+          <div className="space-y-8 animate-[fadeInUp_0.8s_ease-out]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DailyCard type="physical" value={biorhythmState.physical} />
+              <DailyCard type="emotional" value={biorhythmState.emotional} />
+              <DailyCard type="intellectual" value={biorhythmState.intellectual} />
+            </div>
+
+            <div className="bg-gradient-to-r from-indigo-950/40 to-purple-950/40 backdrop-blur-md rounded-3xl p-8 border border-white/10 text-center relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
+              
+              {!aiAdvice ? (
+                <div className="flex flex-col items-center">
+                  <Sparkles className="w-10 h-10 text-yellow-300 mb-4" />
+                  <h3 className="text-xl font-bold mb-2">AI Daily Insight</h3>
+                  <button
+                    onClick={handleGetAdvice}
+                    disabled={loadingAdvice}
+                    className="mt-4 px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-full text-sm font-semibold transition-all flex items-center gap-2"
+                  >
+                    {loadingAdvice ? 'Analyzing...' : 'Generate Insight'}
+                  </button>
+                </div>
+              ) : (
+                <div className="animate-[fadeIn_0.5s_ease-out]">
+                  <div className="inline-flex items-center gap-2 text-yellow-300 mb-4 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
+                    <Sparkles size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Gemini AI</span>
+                  </div>
+                  <p className="text-lg md:text-xl font-medium leading-relaxed text-white/90">"{aiAdvice}"</p>
+                </div>
+              )}
+            </div>
+
+            <BiorhythmChart data={chartData} />
+          </div>
+        )}
+      </div>
+      
+      <BottomInfoPanel />
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
   <React.StrictMode>
     <App />

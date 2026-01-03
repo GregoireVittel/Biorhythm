@@ -1,4 +1,4 @@
-import { BiorhythmData, BiorhythmState } from '../types';
+import { BiorhythmData, BiorhythmState } from '../types.ts';
 
 const CYCLES = {
   physical: 23,

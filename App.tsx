@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, RefreshCw, Sparkles, ChevronRight } from 'lucide-react';
-import AnimatedBackground from './components/AnimatedBackground';
-import BiorhythmChart from './components/BiorhythmChart';
-import DailyCard from './components/DailyCard';
-import BottomInfoPanel from './components/BottomInfoPanel';
-import { calculateBiorhythm, getBiorhythmSeries } from './utils/biorhythm';
-import { getDailyAdvice } from './services/geminiService';
-import { BiorhythmState, BiorhythmData } from './types';
+import AnimatedBackground from './components/AnimatedBackground.tsx';
+import BiorhythmChart from './components/BiorhythmChart.tsx';
+import DailyCard from './components/DailyCard.tsx';
+import BottomInfoPanel from './components/BottomInfoPanel.tsx';
+import { calculateBiorhythm, getBiorhythmSeries } from './utils/biorhythm.ts';
+import { getDailyAdvice } from './services/geminiService.ts';
+import { BiorhythmState, BiorhythmData } from './types.ts';
 
 const App: React.FC = () => {
   const [dob, setDob] = useState<string>('');
